@@ -9,7 +9,7 @@ bpy.ops.object.select_all(action='TOGGLE')
 bpy.ops.object.delete(use_global=False)
 
 inch = 0.0254
-main_dims = (13.4,6.9,2.4)
+main_dims = (13.4*inch,6.9*inch,2.4*inch)
 
 class trace_image:
     def __init__(self):
@@ -26,12 +26,9 @@ class trace_image:
 
 trace_image = trace_image()
 
-
 class main_body():
     def __init__(self, main_dims):
-        self.len = main_dims[0] * inch
-        self.wid = main_dims[1] * inch
-        self.hei = main_dims[2] * inch 
+        self.dims = main_dims 
         self.create_mat()
         self.create_main_body()
 
@@ -44,41 +41,33 @@ class main_body():
 
     def create_main_body(self):
         main_body = bpy.ops.mesh.primitive_cube_add(view_align=False, enter_editmode=False, location=(0,0,0))
-        bpy.context.object.scale = (self.len, self.wid, self.hei)
+        bpy.context.object.scale = (self.dims)
         bpy.context.object.name = "main_body"
         #bpy.ops.object.modifier_add(type='SUBSURF')
         #bpy.context.object.modifiers["Subsurf"].levels = 2
         bpy.context.object.data.materials.append(self.new_mat)
         bpy.context.object.active_material.use_object_color = True
-        return bpy.context.object
         
-
-
 main_body = main_body(main_dims)
 
 
 class pads():
-    def __init__(self, main_dims):
-        self.main_dims = main_dims
-        self.len = .7 * inch
-        self.wid = .7 * inch
-        self.hei = .2 * inch
+    def __init__(self):
         self.init_pos = [-0.2605,0.050351,0.06]
         self.create_pad()
+        self.pad = bpy.data.objects.get("pad_init")
         self.create_pads()
-        
-
-    
+        objs = bpy.data.objects
+        objs.remove(objs["pad_init"], True)
 
     def create_pad(self):
         pad = bpy.ops.mesh.primitive_cube_add(view_align=False,enter_editmode=False, location = self.init_pos)
-        bpy.context.object.scale = (self.len, self.wid, self.hei)
+        bpy.context.object.scale = (0.01778,0.01778,0.00508)
         bpy.context.object.name = "pad_init"
         return bpy.context.object
     
     def create_pads(self):
         counter = 1
-        pad = bpy.data.objects.get("pad_init")
         rowcounter = 0
         colcounter = 0
         pad_y_pos = self.init_pos[1]
@@ -87,22 +76,16 @@ class pads():
                 colcounter = 0
                 rowcounter += 1
                 pad_y_pos = self.init_pos[1]+(-0.0545649*rowcounter)
-            
             pad_x_pos = self.init_pos[0]+(0.0472651*colcounter)
-            
-            pad2 = pad.copy()
-            pad2.name = ('pad')
-            pad2.location = (pad_x_pos,pad_y_pos,self.init_pos[2])
-            bpy.data.scenes[0].objects.link(pad2)
+            new_pad = self.pad.copy()
+            new_pad.name = ('pad')
+            new_pad.location = (pad_x_pos,pad_y_pos,self.init_pos[2])
+            bpy.data.scenes[0].objects.link(new_pad)
             counter += 1
             colcounter += 1
-        objs = bpy.data.objects
-        objs.remove(objs["pad_init"], True)
         
-pads = pads(main_dims)
-
-
-
+        
+pads = pads()
 
 class bottom_buttons():
     def __init__(self):
@@ -129,16 +112,20 @@ bottom_buttons = bottom_buttons()
 class knobs():
     def __init__(self):
         self.init_pos = (-0.070415,0.117944,0.074186)
-        self.scale = ((0.009466, 0.009466, 0.015))
-        bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, view_align=False, enter_editmode=False,location=self.init_pos)
-        bpy.context.object.scale = self.scale
-        bpy.context.object.name = "knob_init"
+        self.scale = (0.009466, 0.009466, 0.015)
+        self.create_knob()
         self.knob = bpy.data.objects.get("knob_init")
         self.knob.scale = self.scale
+
         main_knob = self.knob.copy()
         main_knob.location = (-0.289487,0.138046,self.init_pos[2])
         bpy.data.scenes[0].objects.link(main_knob)
         self.create_param_knobs()
+
+    def create_knob(self):
+        bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, view_align=False, enter_editmode=False,location=self.init_pos)
+        bpy.context.object.scale = self.scale
+        bpy.context.object.name = "knob_init"
 
     def create_param_knobs(self):
         counter = 1
@@ -158,73 +145,39 @@ knobs = knobs()
 
 class small_buttons():
     def __init__(self):
-        self.init_pos = (-0.068885,0.059996,0.063561)
-        bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, view_align=False, enter_editmode=False,location=self.init_pos)
-        bpy.context.object.scale = (0.006901, 0.006901, 0.002874)
-        bpy.context.object.name = "small_button_init"
+        self.z_pos = 0.063561
+        self.x_y_diff_count = (\
+            (-0.068885,0.059996,0,2),\
+            (-0.011,0.025067,0,2),\
+            (-0.011,-0.008485,0,2),\
+            (0.033121,-0.008485,0,2),\
+            (0.064264,-0.008485,0,2),\
+            (0.096664,-0.008485,0,2),\
+            (0.064264,0.024667,0,2),\
+            (-0.24407,0.112461,0.0278,6),\
+            (-0.022792,-0.079691,0.0318,5),\
+            (0.162415,0.008335,0.028,7)\
+        )
+        self.create_small_button()
         self.small_button = bpy.data.objects.get("small_button_init")
-        self.top_small_buttons()
-        self.start_stop_buttons()
-        self.arrows()
-        self.pattern_select()
-        self.page_buttons()
-        
-    def start_stop_buttons(self):
-        top_small = self.small_button.copy()
-        top_small.location = (-0.011,0.025067,self.init_pos[2])
-        bpy.data.scenes[0].objects.link(top_small)  
-         
-        top_small = self.small_button.copy()
-        top_small.location = (-0.011,-0.008485,self.init_pos[2])
-        bpy.data.scenes[0].objects.link(top_small)     
-        
-    def top_small_buttons(self):
-        counter = 1
-        but_x_pos = -0.24407
-        while counter != 6:
-            top_small = self.small_button.copy()
-            top_small.location = (but_x_pos,0.112461,self.init_pos[2])
-            but_x_pos += 0.0278
-            bpy.data.scenes[0].objects.link(top_small)
-            counter += 1
-        
-    def arrows(self):
-        top_small = self.small_button.copy()
-        top_small.location = (0.033121,-0.008485,self.init_pos[2])
-        bpy.data.scenes[0].objects.link(top_small)
-        
-        top_small = self.small_button.copy()
-        top_small.location = (0.064264,-0.008485,self.init_pos[2])
-        bpy.data.scenes[0].objects.link(top_small)
+        self.clone_small_button_loops()
 
-        top_small = self.small_button.copy()
-        top_small.location = (0.096664,-0.008485,self.init_pos[2])
-        bpy.data.scenes[0].objects.link(top_small)  
-
-        top_small = self.small_button.copy()
-        top_small.location = (0.064264,0.024667,self.init_pos[2])
-        bpy.data.scenes[0].objects.link(top_small)              
-            
-    def pattern_select(self):
-        counter = 1
-        but_x_pos = -0.022792
-        while counter != 5:
-            top_small = self.small_button.copy()
-            top_small.location = (but_x_pos,-0.079691,self.init_pos[2])
-            but_x_pos += 0.0318
-            bpy.data.scenes[0].objects.link(top_small)
-            counter += 1
-
-    def page_buttons(self):
-        counter = 1
-        but_x_pos = 0.162415
-        while counter != 7:
-            top_small = self.small_button.copy()
-            top_small.location = (but_x_pos,0.008335,self.init_pos[2])
-            but_x_pos += 0.028
-            bpy.data.scenes[0].objects.link(top_small)
-            counter += 1
-
+    def create_small_button(self):
+         bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, view_align=False, enter_editmode=False,location=(0,0,0))
+         bpy.context.object.scale = (0.006901, 0.006901, 0.002874)
+         bpy.context.object.name = "small_button_init"  
+        
+    def clone_small_button_loops(self):
+        for pos in self.x_y_diff_count:
+            counter = 1
+            but_x_location = pos[0]
+            while counter != pos[3]:
+                but = self.small_button.copy()
+                but.location = (but_x_location,pos[1],self.z_pos)
+                but_x_location += pos[2]
+                bpy.data.scenes[0].objects.link(but) 
+                counter += 1  
+          
 small_buttons = small_buttons()
 
 class wide_buttons():
@@ -265,15 +218,13 @@ wide_buttons = wide_buttons()
 class leds():
     def __init__(self):
         self.z_pos = 0.06096
-        self.x_y_pos = (\
-            (0.135498,-0.039772),\
-            (0.083901,-0.04),\
-            (-0.068194,0.080124),\
-            (0.083901,-0.051409),\
-            (0.267032,-0.039772),\
-            (0.305601,-0.039772),\
-        )
         self.x_y_diff_count = (\
+            (0.135498,-0.039772,0,2),\
+            (0.083901,-0.04,0,2),\
+            (-0.068194,0.080124,0,2),\
+            (0.083901,-0.051409,0,2),\
+            (0.267032,-0.039772,0,2),\
+            (0.305601,-0.039772,0,2),\
             (-0.023513,-0.062289,0.0318639,5),\
             (-0.306835, -0.107291, 0.038, 17),\
             (0.284346,-0.111262,0.0111663,5),\
@@ -282,7 +233,6 @@ class leds():
         )
         self.create_led_mesh()
         self.led = bpy.data.objects.get("led_init")
-        self.clone_led()
         self.clone_led_loops()
         bpy.data.objects.remove(bpy.data.objects["led_init"], True)
 
@@ -290,13 +240,6 @@ class leds():
         bpy.ops.mesh.primitive_uv_sphere_add(size=1, view_align=False, enter_editmode=False,location=(0,0,0))
         bpy.context.object.scale = (0.002875, 0.002875, 0.002875)
         bpy.context.object.name = "led_init"
-
-    def clone_led(self):
-        for pos in self.x_y_pos:
-            led = self.led.copy()
-            led.location = (pos[0],pos[1],self.z_pos)
-            led.name = "led"
-            bpy.data.scenes[0].objects.link(led) 
 
     def clone_led_loops(self):
         for pos in self.x_y_diff_count:
