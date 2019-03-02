@@ -1,31 +1,28 @@
 import bpy
 import os
-
 filepath = bpy.data.filepath
 directory = os.path.dirname(filepath)
 
-
-
+# delete everything between running scripts, for dev use
 bpy.ops.object.select_all(action='TOGGLE')
 bpy.ops.object.select_all(action='TOGGLE')
-
 bpy.ops.object.delete(use_global=False)
 
 inch = 0.0254
 main_dims = (13.4,6.9,2.4)
 
-def trace_image():
-    empty = bpy.data.objects.new("trace_image", None)
-    empty.location = (-0.343254, -0.177876, 0.061025)
-    empty.scale = (0.689661,0.689661,0.689661)
-    empty.color[3] = 0.304085
-    scene = bpy.context.scene
-    scene.objects.link(empty)
-    scene.update()
-    empty.empty_draw_type = 'IMAGE'
-    img = bpy.data.images.load(os.path.join( directory , "rytm1_2048x2048.png"))
-    empty.data = img
-    return empty
+class trace_image:
+    def __init__(self):
+        empty = bpy.data.objects.new("trace_image", None)
+        empty.location = (-0.340345, -0.177876, 0.061025)
+        empty.scale = (0.681091,0.685632,0.685632)
+        empty.color[3] = 0.304085
+        scene = bpy.context.scene
+        scene.objects.link(empty)
+        scene.update()
+        empty.empty_draw_type = 'IMAGE'
+        img = bpy.data.images.load(os.path.join( directory , "rytm1_2048x2048.png"))
+        empty.data = img
 
 trace_image = trace_image()
 
@@ -66,9 +63,7 @@ class pads():
         self.len = .7 * inch
         self.wid = .7 * inch
         self.hei = .2 * inch
-
         self.init_pos = [-0.2605,0.050351,0.06]
-        # self.init_pos = [-11.15*inch,4.775*inch,2.6*inch]
         self.create_pad()
         self.create_pads()
         
@@ -134,12 +129,14 @@ bottom_buttons = bottom_buttons()
 class knobs():
     def __init__(self):
         self.init_pos = (-0.070415,0.117944,0.074186)
+        self.scale = ((0.009466, 0.009466, 0.015))
         bpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, view_align=False, enter_editmode=False,location=self.init_pos)
-        bpy.context.object.scale = (0.009466, 0.009466, 0.012)
+        bpy.context.object.scale = self.scale
         bpy.context.object.name = "knob_init"
         self.knob = bpy.data.objects.get("knob_init")
+        self.knob.scale = self.scale
         main_knob = self.knob.copy()
-        main_knob.location = (-0.289487,0.138046,0.07419)
+        main_knob.location = (-0.289487,0.138046,self.init_pos[2])
         bpy.data.scenes[0].objects.link(main_knob)
         self.create_param_knobs()
 
@@ -152,7 +149,7 @@ class knobs():
                 knob_y_location += -0.05
                 knob_x_location -= (0.0532818 * 4)
             param_knob  = self.knob.copy()
-            param_knob.location = (knob_x_location,knob_y_location,0.074186)
+            param_knob.location = (knob_x_location,knob_y_location,self.init_pos[2])
             knob_x_location += 0.0532818
             bpy.data.scenes[0].objects.link(param_knob)
             counter += 1
@@ -174,11 +171,11 @@ class small_buttons():
         
     def start_stop_buttons(self):
         top_small = self.small_button.copy()
-        top_small.location = (-0.011,0.025067,0.063561)
+        top_small.location = (-0.011,0.025067,self.init_pos[2])
         bpy.data.scenes[0].objects.link(top_small)  
          
         top_small = self.small_button.copy()
-        top_small.location = (-0.011,-0.008485,0.063561)
+        top_small.location = (-0.011,-0.008485,self.init_pos[2])
         bpy.data.scenes[0].objects.link(top_small)     
         
     def top_small_buttons(self):
@@ -186,26 +183,26 @@ class small_buttons():
         but_x_pos = -0.24407
         while counter != 6:
             top_small = self.small_button.copy()
-            top_small.location = (but_x_pos,0.112461,0.063561)
+            top_small.location = (but_x_pos,0.112461,self.init_pos[2])
             but_x_pos += 0.0278
             bpy.data.scenes[0].objects.link(top_small)
             counter += 1
         
     def arrows(self):
         top_small = self.small_button.copy()
-        top_small.location = (0.033121,-0.008485,0.063561)
+        top_small.location = (0.033121,-0.008485,self.init_pos[2])
         bpy.data.scenes[0].objects.link(top_small)
         
         top_small = self.small_button.copy()
-        top_small.location = (0.064264,-0.008485,0.063561)
+        top_small.location = (0.064264,-0.008485,self.init_pos[2])
         bpy.data.scenes[0].objects.link(top_small)
 
         top_small = self.small_button.copy()
-        top_small.location = (0.096664,-0.008485,0.063561)
+        top_small.location = (0.096664,-0.008485,self.init_pos[2])
         bpy.data.scenes[0].objects.link(top_small)  
 
         top_small = self.small_button.copy()
-        top_small.location = (0.064264,0.024667,0.063561)
+        top_small.location = (0.064264,0.024667,self.init_pos[2])
         bpy.data.scenes[0].objects.link(top_small)              
             
     def pattern_select(self):
@@ -213,7 +210,7 @@ class small_buttons():
         but_x_pos = -0.022792
         while counter != 5:
             top_small = self.small_button.copy()
-            top_small.location = (but_x_pos,-0.079691,0.063561)
+            top_small.location = (but_x_pos,-0.079691,self.init_pos[2])
             but_x_pos += 0.0318
             bpy.data.scenes[0].objects.link(top_small)
             counter += 1
@@ -223,7 +220,7 @@ class small_buttons():
         but_x_pos = 0.162415
         while counter != 7:
             top_small = self.small_button.copy()
-            top_small.location = (but_x_pos,0.008335,0.063561)
+            top_small.location = (but_x_pos,0.008335,self.init_pos[2])
             but_x_pos += 0.028
             bpy.data.scenes[0].objects.link(top_small)
             counter += 1
@@ -232,146 +229,84 @@ small_buttons = small_buttons()
 
 class wide_buttons():
     def __init__(self):
-        self.init_pos = (-0.06153,-0.046612,0.062694)
-        bpy.ops.mesh.primitive_cube_add(view_align=False, enter_editmode=False,location=self.init_pos)
+        self.z_pos = 0.062694
+        self.x_y_pos = (\
+            (-0.06153,-0.046612,''),\
+            (-0.31229,-0.060675,'left_button_bottom'),\
+            (-0.31229,-0.004328,'left_button_middle'),\
+            (-0.31229,0.052022,'left_button_top'),\
+            (0.135,-0.061347,'rec_button'),\
+            (0.173318,-0.061347,'play_button'),\
+            (0.211154,-0.061347,'stop_button'),\
+            (0.268486,-0.061347,'song_button'),\
+            (0.305438,-0.061347,'chain_button'),\
+            (0.301824,-0.132425,'page_button'),\
+        )
+        self.create_wide_button_mesh()
+        self.wide_button = bpy.data.objects.get("wide_button_init")
+        self.clone_wide_button()
+        bpy.data.objects.remove(bpy.data.objects["wide_button_init"], True)
+        
+
+    def create_wide_button_mesh(self):
+        bpy.ops.mesh.primitive_cube_add(view_align=False, enter_editmode=False,location=(0,0,0))
         bpy.context.object.scale = (0.011847, 0.004849, 0.00229)
         bpy.context.object.name = "wide_button_init"
-        self.wide_button = bpy.data.objects.get("wide_button_init")
+
         
-        left_button_bottom = self.wide_button.copy()
-        left_button_bottom.location = (-0.31229,-0.060675,0.062694)
-        bpy.data.scenes[0].objects.link(left_button_bottom)
-        
-        left_button_middle = self.wide_button.copy()
-        left_button_middle.location = (-0.31229,-0.004328,0.062694)
-        bpy.data.scenes[0].objects.link(left_button_middle)        
-        
-        left_button_top = self.wide_button.copy()
-        left_button_top.location = (-0.31229,0.052022,0.062694)
-        bpy.data.scenes[0].objects.link(left_button_top)
-        
-        
-        rec_button = self.wide_button.copy()
-        rec_button.location = (0.135,-0.061347,0.062694)
-        bpy.data.scenes[0].objects.link(rec_button)
-        
-        play_button = self.wide_button.copy()
-        play_button.location = (0.173318,-0.061347,0.062694)
-        bpy.data.scenes[0].objects.link(play_button)
-  
-        stop_button = self.wide_button.copy()
-        stop_button.location = (0.211154,-0.061347,0.062694)
-        bpy.data.scenes[0].objects.link(stop_button)  
-        
-        song_button = self.wide_button.copy()
-        song_button.location = (0.268486,-0.061347,0.062694)
-        bpy.data.scenes[0].objects.link(song_button)          
-        
-        chain_button = self.wide_button.copy()
-        chain_button.location = (0.305438,-0.061347,0.062694)
-        bpy.data.scenes[0].objects.link(chain_button)
-        
-        page_button = self.wide_button.copy()
-        page_button.location = (0.301824,-0.132425,0.062694)
-        bpy.data.scenes[0].objects.link(page_button) 
+    def clone_wide_button(self):
+        for pos in self.x_y_pos:
+            button = self.wide_button.copy()
+            button.location = (pos[0],pos[1],self.z_pos)
+            bpy.data.scenes[0].objects.link(button) 
         
 wide_buttons = wide_buttons()
 
-
-#bpy.ops.object.select_all(action='TOGGLE')
-#bpy.ops.object.select_all(action='TOGGLE')
-
-# bpy.ops.objects.resize(value=(1,1,1))
-
 class leds():
     def __init__(self):
-        led_init_pos = (0.135498,-0.039772,0.06096)
-        bpy.ops.mesh.primitive_uv_sphere_add(size=1, view_align=False, enter_editmode=False,location=led_init_pos)
+        self.z_pos = 0.06096
+        self.x_y_pos = (\
+            (0.135498,-0.039772),\
+            (0.083901,-0.04),\
+            (-0.068194,0.080124),\
+            (0.083901,-0.051409),\
+            (0.267032,-0.039772),\
+            (0.305601,-0.039772),\
+        )
+        self.x_y_diff_count = (\
+            (-0.023513,-0.062289,0.0318639,5),\
+            (-0.306835, -0.107291, 0.038, 17),\
+            (0.284346,-0.111262,0.0111663,5),\
+            (0.160981,0.028403,0.028,7),\
+            (-0.243758,0.132559,0.0284735,6)\
+        )
+        self.create_led_mesh()
+        self.led = bpy.data.objects.get("led_init")
+        self.clone_led()
+        self.clone_led_loops()
+        bpy.data.objects.remove(bpy.data.objects["led_init"], True)
+
+    def create_led_mesh(self):
+        bpy.ops.mesh.primitive_uv_sphere_add(size=1, view_align=False, enter_editmode=False,location=(0,0,0))
         bpy.context.object.scale = (0.002875, 0.002875, 0.002875)
         bpy.context.object.name = "led_init"
-        self.led = bpy.data.objects.get("led_init")
 
-        led = self.led.copy()
-        led.location = (0.083901,-0.04,0.06096)
-        bpy.data.scenes[0].objects.link(led)   
-        
-        led = self.led.copy()
-        led.location = (-0.068194,0.080124,0.06096)
-        bpy.data.scenes[0].objects.link(led) 
-        
-        led = self.led.copy()
-        led.location = (0.083901,-0.051409,0.06096)
-        bpy.data.scenes[0].objects.link(led)  
-
-
-
-        led = self.led.copy()
-        led.location = (0.267032,-0.039772,0.06096)
-        bpy.data.scenes[0].objects.link(led)  
-
-
-        led = self.led.copy()
-        led.location = (0.305601,-0.039772,0.06096)
-        bpy.data.scenes[0].objects.link(led)  
-
-
-        counter = 1
-        led_x_location = -0.023513
-        while counter != 5:
+    def clone_led(self):
+        for pos in self.x_y_pos:
             led = self.led.copy()
-            led.location = (led_x_location,-0.062289,0.06096)
-            led_x_location += 0.0318639
+            led.location = (pos[0],pos[1],self.z_pos)
+            led.name = "led"
             bpy.data.scenes[0].objects.link(led) 
-            counter += 1       
 
-        led = self.led.copy()
-        led.location = (-0.06164,-0.079991,0.06096)
-        bpy.data.scenes[0].objects.link(led) 
-
-
-        counter = 1
-        led_x_location = -0.306835
-        while counter != 17:
-            led = self.led.copy()
-            led.location = (led_x_location,-0.107291,0.06096)
-            led_x_location += 0.038
-            bpy.data.scenes[0].objects.link(led) 
-            counter += 1 
-
-
-
-        counter = 1
-        led_x_location = 0.284346
-        while counter != 5:
-            led = self.led.copy()
-            led.location = (led_x_location,-0.111262,0.06096)
-            led_x_location += 0.0111663
-            bpy.data.scenes[0].objects.link(led) 
-            counter += 1 
-
-
-
-        counter = 1
-        led_x_location = 0.160981
-        while counter != 7:
-            led = self.led.copy()
-            led.location = (led_x_location,0.028403,0.06096)
-            led_x_location += 0.028
-            bpy.data.scenes[0].objects.link(led) 
-            counter += 1 
-
-
-        counter = 1
-        led_x_location = -0.243758
-        while counter != 6:
-            led = self.led.copy()
-            led.location = (led_x_location,0.132559,0.06096)
-            led_x_location += 0.0284735
-            bpy.data.scenes[0].objects.link(led) 
-            counter += 1 
-
+    def clone_led_loops(self):
+        for pos in self.x_y_diff_count:
+            counter = 1
+            led_x_location = pos[0]
+            while counter != pos[3]:
+                led = self.led.copy()
+                led.location = (led_x_location,pos[1],self.z_pos)
+                led_x_location += pos[2]
+                bpy.data.scenes[0].objects.link(led) 
+                counter += 1       
 
 leds = leds()
-
-
-
