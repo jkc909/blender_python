@@ -8,9 +8,6 @@ bpy.ops.object.select_all(action='TOGGLE')
 bpy.ops.object.select_all(action='TOGGLE')
 bpy.ops.object.delete(use_global=False)
 
-inch = 0.0254
-main_dims = (13.4*inch,6.9*inch,2.4*inch)
-
 class trace_image:
     def __init__(self):
         empty = bpy.data.objects.new("trace_image", None)
@@ -27,8 +24,9 @@ class trace_image:
 trace_image = trace_image()
 
 class main_body():
-    def __init__(self, main_dims):
-        self.dims = main_dims 
+    def __init__(self):
+        inch = 0.0254
+        self.dims = (13.4*inch,6.9*inch,2.4*inch)
         self.create_mat()
         self.create_main_body()
 
@@ -48,7 +46,7 @@ class main_body():
         bpy.context.object.data.materials.append(self.new_mat)
         bpy.context.object.active_material.use_object_color = True
         
-main_body = main_body(main_dims)
+main_body = main_body()
 
 
 class pads():
