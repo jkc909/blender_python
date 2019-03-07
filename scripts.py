@@ -6,72 +6,9 @@ directory = os.path.dirname(filepath)
 # delete everything between running scripts, for dev use
 bpy.ops.object.select_all(action='TOGGLE')
 bpy.ops.object.select_all(action='TOGGLE')
-bpy.ops.object.delete(use_global=False)
-
-
-bpy.ops.wm.addon_enable(module='io_import_images_as_planes')
-#bpy.ops.import_image.to_plane(files=[{'name':(os.path.join( directory , "rytm1_2048x2048.png"))}])
-
-
-img = bpy.ops.import_image.to_plane(files=[{'name':(os.path.join( directory , "rytm1_2048x2048.png"))}])
-bpy.context.object.location = (-0.002387,0.001423,0.06183)
-bpy.context.object.scale = (0.353905,0.356265,0.356265)
-
-
+bpy.ops.object.delete(use_global=True)
 
 scene = bpy.context.scene
-# now add some light
-lamp_data = bpy.data.lamps.new(name="lampa", type='POINT')  
-lamp_object = bpy.data.objects.new(name="Lampicka", object_data=lamp_data)  
-scene.objects.link(lamp_object)  
-lamp_object.location = (0.088046, 0.071371, 2.27678)
-
-# and now set the camera
-cam_data = bpy.data.cameras.new(name="cam")  
-cam_ob = bpy.data.objects.new(name="Kamerka", object_data=cam_data)  
-scene.objects.link(cam_ob)  
-cam_ob.location = (0, 0, 0.9)  
-cam_ob.rotation_euler = (68.9842,-0.000008,-26.0696)  
-cam = bpy.data.cameras[cam_data.name]  
-cam.lens = 10
-
-
-
-import bpy
-
-verts = [(-1,  1,   0),
-         ( 1,  1,   0),
-         ( 2, -3,   0),
-         (-2, -1,   0),
-         (-1,  1.5, 1),
-         ( 1,  1.5, 1),
-        ]
-
-# faces are a list of indices to each vertex from the above list
-faces = [[0, 1, 2, 3], [0, 1, 5, 4]]
-
-mesh = bpy.data.meshes.new(name="New Mesh")
-mesh.from_pydata(verts, [], faces)
-obj = bpy.data.objects.new('New object', mesh)
-bpy.context.scene.objects.link(obj)
-
-
-
-
-class trace_image:
-    def __init__(self):
-        empty = bpy.data.objects.new("trace_image", None)
-        empty.location = (-0.340345, -0.177876, 0.061025)
-        empty.scale = (0.681091,0.685632,0.685632)
-        empty.color[3] = 0.304085
-        scene = bpy.context.scene
-        scene.objects.link(empty)
-        scene.update()
-        empty.empty_draw_type = 'IMAGE'
-        img = bpy.data.images.load(os.path.join( directory , "rytm1_2048x2048.png"))
-        empty.data = img
-
-trace_image = trace_image()
 
 class main_body():
     def __init__(self):
@@ -99,6 +36,67 @@ class main_body():
 main_body = main_body()
 
 
+class leds():
+    def __init__(self):
+        self.z_pos = 0.06096
+        self.x_y_diff_count = (\
+            (0.135498,-0.039772,0,2),\
+            (0.083901,-0.04,0,2),\
+            (-0.068194,0.080124,0,2),\
+            (0.083901,-0.051409,0,2),\
+            (0.267032,-0.039772,0,2),\
+            (0.305601,-0.039772,0,2),\
+            (-0.023513,-0.062289,0.0318639,5),\
+            (-0.306835, -0.107291, 0.038, 17),\
+            (0.284346,-0.111262,0.0111663,5),\
+            (0.160981,0.028403,0.028,7),\
+            (-0.243758,0.132559,0.0284735,6)\
+        )
+        self.create_mat()
+        self.create_led_mesh()
+        self.led = bpy.data.objects.get("led_init")
+        self.clone_led_loops()
+        bpy.data.objects.remove(bpy.data.objects["led_init"], True)
+
+    def create_mat(self):
+        mat_name = 'Led_1'
+        mat = bpy.data.materials.new(mat_name)
+        mat = bpy.data.materials[mat_name]
+        nodes = mat.node_tree.nodes
+        for node in nodes:
+            nodes.remove(node)
+        mat.use_nodes = True
+        node_emission = nodes.new(type='ShaderNodeEmission')
+        node_emission.inputs[0].default_value = (0.748414, 0, 0, 1)
+        node_output = nodes.new(type='ShaderNodeOutputMaterial')
+        node_output.location = 400,0
+        links = mat.node_tree.links
+        link = links.new(node_emission.outputs[0], node_output.inputs[0])
+        from_s = node_emission.outputs[0]
+        to_s = node_output.inputs[0]
+        self.new_mat = mat
+
+    def create_led_mesh(self):
+        bpy.ops.mesh.primitive_uv_sphere_add(size=1, view_align=False, enter_editmode=False,location=(0,0,0))
+        bpy.context.object.scale = (0.002875, 0.002875, 0.002875)
+        bpy.context.object.name = "led_init"
+        bpy.context.object.data.materials.append(self.new_mat)
+
+    def clone_led_loops(self):
+        for pos in self.x_y_diff_count:
+            counter = 1
+            led_x_location = pos[0]
+            while counter != pos[3]:
+                led = self.led.copy()
+                led.location = (led_x_location,pos[1],self.z_pos)
+                led_x_location += pos[2]
+                bpy.data.scenes[0].objects.link(led) 
+                counter += 1       
+
+leds = leds()
+
+
+
 class pads():
     def __init__(self):
         self.init_pos = [-0.2605,0.050351,0.06]
@@ -112,13 +110,19 @@ class pads():
     def create_mat(self):
         mat_name = 'Pad_1'
         mat = bpy.data.materials.new(mat_name)
-        bpy.data.materials[mat_name].use_nodes = True
-        bpy.data.materials[mat_name].node_tree.nodes.new(type='ShaderNodeEmission')
-        bpy.data.materials[mat_name].node_tree.nodes["Emission"].inputs[0].default_value = (0, 0.814053, 0.00291153, 1)
-        inp = bpy.data.materials[mat_name].node_tree.nodes['Material Output'].inputs["Surface"]
-        outp = bpy.data.materials[mat_name].node_tree.nodes["Emission"].outputs["Emission"]
-        bpy.data.materials[mat_name].node_tree.links.new(inp,outp)
-        self.new_mat = bpy.data.materials[mat_name]
+        mat = bpy.data.materials[mat_name]
+        nodes = mat.node_tree.nodes
+        for node in nodes:
+            nodes.remove(node)
+        node_emission = nodes.new(type='ShaderNodeEmission')
+        node_emission.inputs[0].default_value = (0, 0.814053, 0.00291153, 1)
+        node_output = nodes.new(type='ShaderNodeOutputMaterial')
+        node_output.location = 0,0
+        links = mat.node_tree.links
+        link = links.new(node_emission.outputs[0], node_output.inputs[0])
+        from_s = node_emission.outputs[0]
+        to_s = node_output.inputs[0]
+        self.new_mat = mat
 
     def create_pad(self):
         pad = bpy.ops.mesh.primitive_cube_add(view_align=False,enter_editmode=False, location = self.init_pos)
@@ -145,7 +149,6 @@ class pads():
             counter += 1
             colcounter += 1
         
-        
 pads = pads()
 
 class bottom_buttons():
@@ -168,7 +171,6 @@ class bottom_buttons():
             counter += 1
 
 bottom_buttons = bottom_buttons()
-
 
 class knobs():
     def __init__(self):
@@ -261,13 +263,11 @@ class wide_buttons():
         self.clone_wide_button()
         bpy.data.objects.remove(bpy.data.objects["wide_button_init"], True)
         
-
     def create_wide_button_mesh(self):
         bpy.ops.mesh.primitive_cube_add(view_align=False, enter_editmode=False,location=(0,0,0))
         bpy.context.object.scale = (0.011847, 0.004849, 0.00229)
         bpy.context.object.name = "wide_button_init"
 
-        
     def clone_wide_button(self):
         for pos in self.x_y_pos:
             button = self.wide_button.copy()
@@ -276,54 +276,61 @@ class wide_buttons():
         
 wide_buttons = wide_buttons()
 
-class leds():
+# example of creating mesh objects by verts and faces
+# faces are a list of indices to each vertex from the above list
+verts = [(-1,  1,   0),
+         ( 1,  1,   0),
+         ( 2, -3,   0),
+         (-2, -1,   0),
+         (-1,  1.5, 1),
+         ( 1,  1.5, 1),
+        ]
+
+faces = [[0, 1, 2, 3], [0, 1, 5, 4]]
+
+mesh = bpy.data.meshes.new(name="New Mesh")
+mesh.from_pydata(verts, [], faces)
+obj = bpy.data.objects.new('New object', mesh)
+bpy.context.scene.objects.link(obj)
+
+# light
+lamp_data = bpy.data.lamps.new(name="lampa", type='POINT')  
+lamp_object = bpy.data.objects.new(name="Lampicka", object_data=lamp_data)  
+scene.objects.link(lamp_object)  
+lamp_object.location = (0.088046, 0.071371, 2.27678)
+
+# camera
+cam_data = bpy.data.cameras.new(name="cam")  
+cam_ob = bpy.data.objects.new(name="Kamerka", object_data=cam_data)  
+scene.objects.link(cam_ob)  
+cam_ob.location = (0, 0, 0.9)  
+cam_ob.rotation_euler = (68.9842,-0.000008,-26.0696)  
+cam = bpy.data.cameras[cam_data.name]  
+cam.lens = 10
+
+
+class trace_image:
     def __init__(self):
-        self.z_pos = 0.06096
-        self.x_y_diff_count = (\
-            (0.135498,-0.039772,0,2),\
-            (0.083901,-0.04,0,2),\
-            (-0.068194,0.080124,0,2),\
-            (0.083901,-0.051409,0,2),\
-            (0.267032,-0.039772,0,2),\
-            (0.305601,-0.039772,0,2),\
-            (-0.023513,-0.062289,0.0318639,5),\
-            (-0.306835, -0.107291, 0.038, 17),\
-            (0.284346,-0.111262,0.0111663,5),\
-            (0.160981,0.028403,0.028,7),\
-            (-0.243758,0.132559,0.0284735,6)\
-        )
-        self.create_mat()
-        self.create_led_mesh()
-        self.led = bpy.data.objects.get("led_init")
-        self.clone_led_loops()
-        bpy.data.objects.remove(bpy.data.objects["led_init"], True)
+        empty = bpy.data.objects.new("trace_image", None)
+        empty.location = (-0.340345, -0.177876, 0.061025)
+        empty.scale = (0.681091,0.685632,0.685632)
+        empty.color[3] = 0.304085
+        scene = bpy.context.scene
+        scene.objects.link(empty)
+        scene.update()
+        empty.empty_draw_type = 'IMAGE'
+        img = bpy.data.images.load(os.path.join( directory , "rytm1_2048x2048.png"))
+        empty.data = img
+        self.create_rendered_img()
 
-    def create_mat(self):
-        mat_name = 'Led_1'
-        mat = bpy.data.materials.new(mat_name)
-        bpy.data.materials[mat_name].use_nodes = True
-        bpy.data.materials[mat_name].node_tree.nodes.new(type='ShaderNodeEmission')
-        bpy.data.materials[mat_name].node_tree.nodes["Emission"].inputs[0].default_value = (0.748414, 0, 0, 1)
-        inp = bpy.data.materials[mat_name].node_tree.nodes['Material Output'].inputs["Surface"]
-        outp = bpy.data.materials[mat_name].node_tree.nodes["Emission"].outputs["Emission"]
-        bpy.data.materials[mat_name].node_tree.links.new(inp,outp)
-        self.new_mat = bpy.data.materials[mat_name]
+    def create_rendered_img(self):
+        bpy.ops.wm.addon_enable(module='io_import_images_as_planes')
+        img = bpy.ops.import_image.to_plane(files=[{'name':(os.path.join( directory , "rytm1_2048x2048.png"))}])
+        bpy.context.object.location = (0.0029,0.001423,0.06183)
+        bpy.context.object.scale = (0.353905,0.356265,0.356265)
 
-    def create_led_mesh(self):
-        bpy.ops.mesh.primitive_uv_sphere_add(size=1, view_align=False, enter_editmode=False,location=(0,0,0))
-        bpy.context.object.scale = (0.002875, 0.002875, 0.002875)
-        bpy.context.object.name = "led_init"
-        bpy.context.object.data.materials.append(self.new_mat)
+trace_image = trace_image()
 
-    def clone_led_loops(self):
-        for pos in self.x_y_diff_count:
-            counter = 1
-            led_x_location = pos[0]
-            while counter != pos[3]:
-                led = self.led.copy()
-                led.location = (led_x_location,pos[1],self.z_pos)
-                led_x_location += pos[2]
-                bpy.data.scenes[0].objects.link(led) 
-                counter += 1       
 
-leds = leds()
+
+led = 'x'
