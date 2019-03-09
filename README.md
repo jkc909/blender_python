@@ -8,6 +8,6 @@ For a quick preview, I've provided a screenshot of the project and the scripts i
 https://github.com/jkc909/blender_python/blob/master/project_screenshot_2.png
 
 ### Render of the animation (WIP):
-https://github.com/jkc909/blender_python/blob/master/scripts.py
+https://github.com/jkc909/blender_python/blob/master/rytm_animation_test.gif
 
 To open the main project file: download the repo and either open the .blend file or run the script provided in Blender. You'll need to place the trace image in the directory of your current Blender session.
